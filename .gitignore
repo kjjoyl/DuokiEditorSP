@@ -1,0 +1,12 @@
+build/
+dist/
+output/
+duoki_editor/cache
+duoki_editor/logs
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.exe

@@ -1,0 +1,278 @@
+{
+  "prefix_mapping": {
+    "restaurant": "餐厅-",
+    "zoo": "动物园-",
+    "clothing_store": "服装店-",
+    "ocean": "海洋-",
+    "store": "商店-"
+  },
+  "app_name_map": {
+    "餐厅": "restaurant",
+    "动物园": "zoo",
+    "服装店": "clothing_store",
+    "海洋": "ocean",
+    "商店": "store"
+  },
+  "map_manager": {
+    "餐厅": "阿瓜",
+    "动物园": "飞飞",
+    "服装店": "白雪公主",
+    "海洋": "哪吒",
+    "商店": "盼盼"
+  },
+  "app_id_map": {
+    "restaurant": 6,
+    "zoo": 7,
+    "clothing_store": 9,
+    "ocean": 11,
+    "store": 10
+  },
+  "npc_id_map_1": {
+    "多奇_a7e0": "30820|30930",
+    "多奇_a7e1": "30821|30931",
+    "多奇_a7e2": "30822|30932",
+    "多奇_a7e3": "30823|30933",
+    "多奇_a7e4": "30824|30934",
+    "孙悟空_a7e0": "30840|30850|30920",
+    "孙悟空_a7e1": "30841|30851|30921",
+    "孙悟空_a7e2": "30842|30852|30922",
+    "孙悟空_a7e3": "30843|30853|30923",
+    "孙悟空_a7e4": "30844|30854|30924",
+    "白雪公主_a7e0": "30810|30900|30910",
+    "白雪公主_a7e1": "30811|30901|30911",
+    "白雪公主_a7e2": "30812|30902|30912",
+    "白雪公主_a7e3": "30813|30903|30913",
+    "白雪公主_a7e4": "30814|30904|30914",
+    "duoki_a7e0": "100010",
+    "duoki_a7e1": "100011",
+    "duoki_a7e2": "100012",
+    "duoki_a7e3": "100013",
+    "duoki_a7e4": "100014"
+  },
+  "npc_id_map_2": {
+    "阿瓜_a7e0": "30930",
+    "阿瓜_a7e1": "30931",
+    "阿瓜_a7e2": "30932",
+    "阿瓜_a7e3": "30933",
+    "阿瓜_a7e4": "30934",
+    "多奇_a7e0": "100010",
+    "多奇_a7e1": "100011",
+    "多奇_a7e2": "100012",
+    "多奇_a7e3": "100013",
+    "多奇_a7e4": "100014",
+    "盼盼_a7e0": "30810",
+    "盼盼_a7e1": "30811",
+    "盼盼_a7e2": "30812",
+    "盼盼_a7e3": "30813",
+    "盼盼_a7e4": "30814",
+    "飞飞_a7e0": "30820",
+    "飞飞_a7e1": "30821",
+    "飞飞_a7e2": "30822",
+    "飞飞_a7e3": "30823",
+    "飞飞_a7e4": "30824",
+    "孙悟空_a7e0": "30840",
+    "孙悟空_a7e1": "30841",
+    "孙悟空_a7e2": "30842",
+    "孙悟空_a7e3": "30843",
+    "孙悟空_a7e4": "30844",
+    "哪吒_a7e0": "30850",
+    "哪吒_a7e1": "30851",
+    "哪吒_a7e2": "30852",
+    "哪吒_a7e3": "30853",
+    "哪吒_a7e4": "30854",
+    "小王子_a7e0": "30900",
+    "小王子_a7e1": "30901",
+    "小王子_a7e2": "30902",
+    "小王子_a7e3": "30903",
+    "小王子_a7e4": "30904",
+    "白雪公主_a7e0": "30910",
+    "白雪公主_a7e1": "30911",
+    "白雪公主_a7e2": "30912",
+    "白雪公主_a7e3": "30913",
+    "白雪公主_a7e4": "30914",
+    "灰灰_a7e0": "30920",
+    "灰灰_a7e1": "30921",
+    "灰灰_a7e2": "30922",
+    "灰灰_a7e3": "30923",
+    "灰灰_a7e4": "30924",
+    "duoki_a7e0": "100010",
+    "duoki_a7e1": "100011",
+    "duoki_a7e2": "100012",
+    "duoki_a7e3": "100013",
+    "duoki_a7e4": "100014"
+  },
+  "npc_id_map_3": {
+    "阿瓜": "3020",
+    "多奇": "3014",
+    "盼盼": "3001",
+    "飞飞": "3005",
+    "孙悟空": "3016",
+    "哪吒": "3017",
+    "小王子": "3015",
+    "白雪公主": "3018",
+    "灰灰": "3019"
+  },
+  "ai_platforms": {
+    "扣子": "coze_api",
+    "n8n": "n8n_api"
+  },
+  "ai_tokens": {
+    "扣子": "coze_token"
+  },
+  "ai_agents": {
+    "扣子": ["多奇对白生成器"],
+    "n8n": ["N8N智能体1", "N8N智能体2"]
+  },
+  "agent_bot_ids": {
+    "多奇对白生成器": "coze_duoki_dialog_bot_id"
+  },
+  "agent_conversation_ids": {
+    "多奇对白生成器": "coze_duoki_conversation_id"
+  },
+"bgm": {
+  "restaurant":[
+    "bgm/country_style.mp3",
+    "bgm/chinese_style_1.mp3",
+    "bgm/chinese_style_2.mp3",
+    "bgm/whistle_funk_style.mp3",
+    "bgm/samba_style.mp3",
+    "bgm/duoki_bgm.mp3"
+    ],
+  "zoo":[
+    "bgm/zoo_1.mp3",
+    "bgm/zoo_2.mp3",
+    "bgm/zoo_4.mp3",
+    "bgm/zoo_6.mp3",
+    "bgm/zoo_7.mp3",
+    "bgm/duoki_bgm.mp3",
+    "bgm/samba_style.mp3"
+    ],
+  "clothing_store":[
+    "bgm/zoo_1.mp3",
+    "bgm/zoo_2.mp3",
+    "bgm/zoo_4.mp3",
+    "bgm/zoo_6.mp3",
+    "bgm/zoo_7.mp3",
+    "bgm/duoki_bgm.mp3",
+    "bgm/samba_style.mp3"
+    ],
+  "ocean":[
+    "bgm/zoo_2.mp3",
+    "bgm/zoo_4.mp3",
+    "bgm/clothing_1.mp3",
+    "bgm/clothing_2.mp3",
+    "bgm/clothing_3.mp3",
+    "bgm/duoki_bgm.mp3",
+    "bgm/samba_style.mp3"
+    ],
+  "store":[
+    "bgm/country_style.mp3",
+    "bgm/chinese_style_1.mp3",
+    "bgm/chinese_style_2.mp3",
+    "bgm/whistle_funk_style.mp3",
+    "bgm/samba_style.mp3",
+    "bgm/duoki_bgm.mp3"
+    ]
+  },
+  "image_references":{
+    "多奇": "resources/references/多奇.jpg",
+    "孙悟空": "resources/references/孙悟空.jpg",
+    "白雪公主": "resources/references/白雪公主.jpg",
+    "灰灰": "resources/references/灰灰.jpg",
+    "阿瓜": "resources/references/阿瓜.jpg",
+    "盼盼": "resources/references/盼盼.jpg",
+    "飞飞": "resources/references/飞飞.jpg",
+    "哪吒": "resources/references/哪吒.jpg",
+    "小王子": "resources/references/小王子.jpg",
+    "敖丙": "resources/references/敖丙.jpg",
+    "唐僧": "resources/references/唐僧.jpg",
+    "猪八戒": "resources/references/猪八戒.jpg",
+    "沙和尚": "resources/references/沙和尚.jpg",
+    "牛魔王": "resources/references/牛魔王.jpg",
+    "红孩儿": "resources/references/红孩儿.jpg",
+    "殷夫人": "resources/references/殷夫人.jpg",
+    "李靖": "resources/references/李靖.jpg",
+    "美人鱼": "resources/references/美人鱼.jpg",
+    "二郎神": "resources/references/二郎神.jpg",
+    "金吒": "resources/references/金吒.jpg",
+    "木吒": "resources/references/木吒.jpg",
+    "二黑": "resources/references/二黑.jpg",
+    "大白": "resources/references/大白.jpg",
+    "敖广": "resources/references/敖广.jpg",
+    "守护者": "resources/references/守护者.jpg",
+    "海女巫": "resources/references/海女巫.jpg",
+    "巫婆": "resources/references/巫婆.jpg",
+    "大脚怪": "resources/references/大脚怪.jpg",
+    "桃乐丝": "resources/references/桃乐丝.jpg",
+    "小奇": "resources/references/小奇.jpg",
+    "朵多": "resources/references/朵多.jpg",
+    "小白兔": "resources/references/小白兔.jpg",
+    "聪明虎": "resources/references/聪明虎.jpg",
+    "狐小狸": "resources/references/狐小狸.jpg",
+    "小恐龙": "resources/references/小恐龙.jpg"
+  },
+  "tts_emotions": {
+    "minimax": [
+      "happy",
+      "sad",
+      "angry",
+      "fearful",
+      "disgusted",
+      "surprised",
+      "calm",
+      "fluent"
+    ],
+    "volcano": [
+      "neutral",
+      "happy",
+      "angry",
+      "sad",
+      "excited",
+      "surprised",
+      "fear",
+      "hate",
+      "coldness",
+      "depressed",
+      "lovey_dovey",
+      "shy",
+      "comfort",
+      "tension",
+      "tender",
+      "storytelling",
+      "radio",
+      "magnetic",
+      "advertising",
+      "vocal_fry",
+      "asmr",
+      "news",
+      "entertainment",
+      "dialect",
+      "chat",
+      "warm",
+      "affectionate",
+      "authoritative"
+    ]
+  },
+  "voice_seed": {
+    "男声": [
+      {
+        "tts": "minimax",
+        "voice": ["English_PassionateWarrior"]
+      }
+    ],
+    "女声": [
+      {
+        "tts": "elevenlabs",
+        "voice": ["KfcOXyYXfJ51vqufTZxR"]
+      },
+      {
+        "tts": "minimax",
+        "voice": ["English_PassionateWarrior"]
+      }
+    ]
+  },
+  "voice_speed": {
+    "male": [0.7, 1, 1.1],
+    "female": [0.8, 1, 1.2]
+  }
+}

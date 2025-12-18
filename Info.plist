@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>DuokiEditor</string>
+    <key>CFBundleExecutable</key>
+    <string>DuokiEditor</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.duokieditor.app</string>
+    <key>CFBundleName</key>
+    <string>DuokiEditor</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleIconFile</key>
+    <string>app_icon.icns</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    
+    <!-- Privacy usage descriptions -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>DuokiEditor needs access to Apple Events for proper functionality.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>DuokiEditor may need microphone access for audio features.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>DuokiEditor may need camera access for image features.</string>
+    
+    <!-- Prevent app transport security issues -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+    
+    <!-- Support for Python runtime -->
+    <key>LSEnvironment</key>
+    <dict>
+        <key>PYTHONHOME</key>
+        <string></string>
+        <key>PYTHONPATH</key>
+        <string></string>
+    </dict>
+    
+    <!-- Prevent Gatekeeper issues -->
+    <key>LSFileQuarantineEnabled</key>
+    <false/>
+    
+    <!-- Hardened Runtime -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    
+    <!-- Additional security settings -->
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+    
+    <!-- Document types support -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>xlsx</string>
+                <string>xls</string>
+            </array>
+            <key>CFBundleTypeName</key>
+            <string>Excel Document</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+    </array>
+    
+    <!-- URL schemes -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.duokieditor.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>duokieditor</string>
+            </array>
+        </dict>
+    </array>
+    
+    <!-- File access permissions for macOS 15+ -->
+    <key>NSAppFiles</key>
+    <true/>
+    <key>NSFileAccessExternalURLs</key>
+    <true/>
+    <key>NSFileProviderDomainURL</key>
+    <true/>
+    
+    <!-- Document access descriptions -->
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>DuokiEditor needs access to Documents folder to open and save Excel files.</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>DuokiEditor needs access to Downloads folder to open Excel files.</string>
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>DuokiEditor needs access to Desktop folder to open Excel files.</string>
+    
+    <!-- File dialog access -->
+    <key>NSFileProviderPresenceUsageDescription</key>
+    <string>DuokiEditor needs to access files through the file picker dialog.</string>
+</dict>
+</plist>

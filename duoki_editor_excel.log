@@ -1,0 +1,14 @@
+2025-10-22 20:38:24,461 - duoki_editor.utils.macos_excel_handler - INFO - 文件路径验证通过: E:\projects\DuokiEditor\test_excel.xlsx
+2025-10-22 20:38:24,804 - duoki_editor.utils.macos_excel_handler - INFO - 文件路径验证通过: E:\projects\DuokiEditor\test_excel.xlsx
+2025-10-22 20:38:24,806 - duoki_editor.utils.macos_excel_handler - INFO - 开始加载Excel文件: E:\projects\DuokiEditor\test_excel.xlsx
+2025-10-22 20:38:24,806 - duoki_editor.utils.macos_excel_handler - INFO - 使用参数: {'engine': 'openpyxl'}
+2025-10-22 20:38:24,812 - duoki_editor.utils.macos_excel_handler - INFO - 成功加载Excel文件，数据形状: (3, 3)
+2025-10-22 20:38:24,830 - duoki_editor.utils.macos_excel_handler - ERROR - 文件不存在: 文件不存在: E:\projects\DuokiEditor\不存在的文件.xlsx
+2025-10-22 20:39:22,965 - root - INFO - 应用启动，日志文件: E:\projects\DuokiEditor\duoki_editor\logs\duoki_editor_20251022_203922.log
+2025-10-22 20:39:22,965 - root - INFO - Python版本: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+2025-10-22 20:39:22,965 - root - INFO - 系统平台: win32
+2025-10-22 20:39:22,965 - root - INFO - 初始化QApplication
+2025-10-22 20:39:23,064 - root - INFO - 加载配置
+2025-10-22 20:39:23,077 - root - INFO - 初始化数据管理器
+2025-10-22 20:39:23,077 - root - INFO - 创建主窗口
+2025-10-22 20:39:24,701 - root - INFO - 启动应用程序主循环
