@@ -1,0 +1,256 @@
+name: Release Build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      description:
+        description: '版本描述'
+        required: false
+        default: '正式发布版本'
+      create_release:
+        description: '是否创建GitHub Release (true/false)'
+        required: false
+        default: 'true'
+  release:
+    types: [published]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Debug Event Info
+      run: |
+        echo "Event: ${{ github.event_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "SHA: ${{ github.sha }}"
+        echo "Release Tag: ${{ github.event.release.tag_name }}"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build Windows Application
+      run: |
+        python build_windows.py
+
+    - name: Create Windows Package
+      run: |
+        if (Test-Path "dist\DuokiEditor") {
+          Compress-Archive -Path "dist\DuokiEditor\*" -DestinationPath "DuokiEditor-Windows.zip"
+        } elseif (Test-Path "dist\DuokiEditor.exe") {
+          Compress-Archive -Path "dist\DuokiEditor.exe" -DestinationPath "DuokiEditor-Windows.zip"
+        } else {
+          echo "No build output found in dist directory"
+          exit 1
+        }
+
+    - name: Create Release (if workflow_dispatch)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.inputs.version }}
+        name: Release ${{ github.event.inputs.version }}
+        body: ${{ github.event.inputs.description }}
+        draft: false
+        prerelease: false
+        files: DuokiEditor-Windows.zip
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Windows Release Asset (if release event)
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: DuokiEditor-Windows.zip
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    env:
+      BUILD_ARCH: ${{ matrix.arch }}
+    steps:
+    - name: Show runner info
+      run: |
+        echo "Runner OS: $(sw_vers)"
+        echo "Kernel: $(uname -a)"
+        echo "Machine arch: $(uname -m)"
+        sysctl -n machdep.cpu.brand_string || true
+        python3 --version || true
+        which python3 || true
+        echo "Target build arch: ${BUILD_ARCH}"
+
+    - name: Enforce target arch
+      run: |
+        ACTUAL=$(uname -m)
+        echo "Actual runner arch: ${ACTUAL}, target: ${BUILD_ARCH}"
+        if [ "${BUILD_ARCH}" = "x86_64" ] && [ "${ACTUAL}" != "x86_64" ]; then
+          echo "Error: x86_64 build must run on Intel runner. Current runner is ${ACTUAL}." >&2
+          exit 1
+        fi
+        if [ "${BUILD_ARCH}" = "arm64" ] && [ "${ACTUAL}" != "arm64" ]; then
+          echo "Error: arm64 build must run on Apple Silicon runner. Current runner is ${ACTUAL}." >&2
+          exit 1
+        fi
+    - name: Debug Event Info
+      run: |
+        echo "Event: ${{ github.event_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "SHA: ${{ github.sha }}"
+        echo "Release Tag: ${{ github.event.release.tag_name }}"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build macOS Application
+      run: |
+        python build_macos.py
+
+    - name: Fix macOS Application
+      run: |
+        # Use our dedicated fix script for comprehensive app fixing
+        python fix_macos_app.py dist/DuokiEditor.app
+        
+        # Additional verification and fixes
+        cd dist
+        if [ -d "DuokiEditor.app" ]; then
+          echo "Performing additional macOS app fixes..."
+          
+          # Ensure proper Info.plist is in place
+          cp ../Info.plist DuokiEditor.app/Contents/Info.plist
+          
+          # Set proper permissions for the entire app bundle
+          chmod -R 755 DuokiEditor.app
+          
+          # Ensure the main executable is executable
+          if [ -f "DuokiEditor.app/Contents/MacOS/DuokiEditor" ]; then
+            chmod +x DuokiEditor.app/Contents/MacOS/DuokiEditor
+          fi
+          
+          # Remove any problematic extended attributes
+          xattr -cr DuokiEditor.app 2>/dev/null || echo "No extended attributes to remove"
+          
+          echo "Using ad-hoc (development) signing for release build..."
+          
+          # Ad-hoc signing with entitlements (development signing)
+          codesign --force --deep --sign - --entitlements ../entitlements.plist DuokiEditor.app
+          
+          if [ $? -eq 0 ]; then
+            echo "✓ Ad-hoc signing completed successfully"
+          else
+            echo "⚠ Ad-hoc signing failed, trying without entitlements..."
+            codesign --force --deep --sign - DuokiEditor.app
+            if [ $? -eq 0 ]; then
+              echo "✓ Basic ad-hoc signing completed"
+            else
+              echo "❌ All signing attempts failed"
+              exit 1
+            fi
+          fi
+          
+          # Verify the final signature
+          codesign --verify --verbose DuokiEditor.app && echo "✓ App signature verified" || echo "⚠ Signature verification failed"
+          
+          # Display signature information
+          echo "Signature details:"
+          codesign -dv DuokiEditor.app 2>&1 || echo "Could not display signature details"
+          
+          # Display app info for debugging
+          echo "App bundle structure:"
+          ls -la DuokiEditor.app/Contents/
+          echo "MacOS directory:"
+          ls -la DuokiEditor.app/Contents/MacOS/ || echo "MacOS directory not found"
+        else
+          echo "Error: DuokiEditor.app not found"
+          exit 1
+        fi
+          
+    - name: Create macOS Package
+      run: |
+        cd dist
+        if [ -d "DuokiEditor.app" ]; then
+          # Create a DMG file for better macOS distribution
+          mkdir -p DuokiEditor-macOS
+          cp -R DuokiEditor.app DuokiEditor-macOS/
+          
+          # Copy documentation and fix scripts to the DMG
+          cp ../fix_macos_app.py DuokiEditor-macOS/ || echo "Fix script not found"
+          cp ../README_macOS.md DuokiEditor-macOS/ || echo "macOS readme not found"
+          cp ../fix_mac_permissions.sh DuokiEditor-macOS/ || echo "Permission fix script not found"
+          cp ../README_MAC_PERMISSIONS.md DuokiEditor-macOS/ || echo "Permission readme not found"
+          
+          # Create a symbolic link to Applications folder
+          ln -s /Applications DuokiEditor-macOS/Applications
+          
+          # Create DMG with proper settings
+          hdiutil create -volname "DuokiEditor" -srcfolder DuokiEditor-macOS -ov -format UDZO DuokiEditor-macOS-${BUILD_ARCH}.dmg
+          
+          # Also create tar.gz for compatibility
+          tar -czf DuokiEditor-macOS-${BUILD_ARCH}.tar.gz DuokiEditor.app
+          
+          echo "✓ macOS packages created successfully"
+          echo "Created files:"
+          ls -la DuokiEditor-macOS-${BUILD_ARCH}.dmg DuokiEditor-macOS-${BUILD_ARCH}.tar.gz
+        else
+          echo "Error: DuokiEditor.app not found"
+          exit 1
+        fi
+
+    - name: Upload macOS Assets to Release (if workflow_dispatch)
+      if: success() && github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.inputs.version }}
+        files: |
+          dist/DuokiEditor-macOS-${{ matrix.arch }}.dmg
+          dist/DuokiEditor-macOS-${{ matrix.arch }}.tar.gz
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload macOS Assets (if release event)
+      if: success() && github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/DuokiEditor-macOS-${{ matrix.arch }}.dmg
+          dist/DuokiEditor-macOS-${{ matrix.arch }}.tar.gz
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
