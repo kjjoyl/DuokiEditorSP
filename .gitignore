@@ -8,5 +8,5 @@ duoki_editor/logs
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.xlsx
 *.exe
