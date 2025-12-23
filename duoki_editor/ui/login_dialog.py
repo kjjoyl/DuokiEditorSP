@@ -9,6 +9,7 @@ import os
 import sys
 from urllib.parse import urlparse
 from ..utils.cache_manager import CacheManager
+from ..utils.config_manager import ConfigManager
 
 class LoginWebPage(QWebEnginePage):
     """自定义WebPage类，用于处理登录页面的特殊逻辑"""
@@ -232,8 +233,8 @@ class LoginDialog(QDialog):
             # 开始定期检查cookie
             self.cookie_check_timer.start(2000)  # 每2秒检查一次
         else:
-            # 如果没有登录URL，直接访问portal页面
-            portal_url = "https://portal-test.qidianlingzhi.com:10199/"
+            cfg = ConfigManager()
+            portal_url = cfg.get_server_url()
             print(f"加载portal页面: {portal_url}")
             self.web_view.load(QUrl(portal_url))
             # 开始定期检查cookie

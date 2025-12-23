@@ -1127,7 +1127,7 @@ class ImageGenerationWorker(QThread):
 
             if not self.is_running:
                 return None
-            response = requests.post(url, headers=headers, data=payload, timeout=400)
+            response = requests.post(url, headers=headers, data=payload, timeout=600)
 
             if not self.is_running:
                 return None
@@ -1156,7 +1156,7 @@ class ImageGenerationWorker(QThread):
                             print(f"[AI图片生成+] URL图片名: {url_name}")
                     except Exception:
                         pass
-                    img_resp = requests.get(chosen_url, headers={'Accept': 'image/*'}, timeout=400)
+                    img_resp = requests.get(chosen_url, headers={'Accept': 'image/*'}, timeout=600)
                     img_resp.raise_for_status()
                     img_bytes = img_resp.content
                     return (img_bytes, None, None) if return_detail else img_bytes
@@ -1914,7 +1914,7 @@ class Img2ImgPage(QWidget):
                     "Authorization": f"Bearer {api_token}",
                     "Content-Type": "application/json"
                 }
-                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=400)
+                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=600)
                 full_body = None
                 try:
                     full_body = response.text
@@ -1930,7 +1930,7 @@ class Img2ImgPage(QWidget):
                     chosen_url = self._extract_image_url_response(response)
                 if not chosen_url:
                     return {"status": "error", "error": "未提取到图片URL", "task": t, "error_full_body": full_body}
-                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=400)
+                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=600)
                 img_resp.raise_for_status()
                 img_bytes = img_resp.content
                 return {"status": "ok", "task": t, "image_bytes": img_bytes}
@@ -2373,7 +2373,7 @@ class Img2ImgPage(QWidget):
                     "Authorization": f"Bearer {api_token}",
                     "Content-Type": "application/json"
                 }
-                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=400)
+                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=600)
                 try:
                     response_json = response.json()
                 except Exception:
@@ -2392,7 +2392,7 @@ class Img2ImgPage(QWidget):
                     chosen_url = self._extract_image_url_response(response)
                 if not chosen_url:
                     return {"status": "error", "error": "未从响应中提取到图片URL", "task": t, "error_full_body": full_body}
-                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=400)
+                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=600)
                 img_resp.raise_for_status()
                 img_bytes = img_resp.content
                 return {"status": "ok", "data_dict": {"prompt": t.get("prompt", ""), "is_batch": False}, "image_bytes": img_bytes}
@@ -2867,7 +2867,9 @@ class AvatarImageGenerator(QWidget):
                 label.setPixmap(pm)
                 label.setText("")
                 return
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/common/image/unit/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/common/image/unit/"
         url = base_url + image_name
         import threading
         def download_worker():
@@ -3014,7 +3016,7 @@ class AvatarImageGenerator(QWidget):
                     "Authorization": f"Bearer {api_token}",
                     "Content-Type": "application/json"
                 }
-                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=400)
+                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=600)
                 full_body = None
                 try:
                     full_body = response.text
@@ -3030,7 +3032,7 @@ class AvatarImageGenerator(QWidget):
                     chosen_url = self._extract_image_url_response_avatar(response)
                 if not chosen_url:
                     return {"status": "error", "error": "未提取到图片URL", "task": t, "error_full_body": full_body}
-                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=400)
+                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=600)
                 img_resp.raise_for_status()
                 img_bytes = img_resp.content
                 return {"status": "ok", "task": t, "image_bytes": img_bytes}
@@ -3343,7 +3345,7 @@ class AvatarImageGenerator(QWidget):
                     "Authorization": f"Bearer {api_token}",
                     "Content-Type": "application/json"
                 }
-                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=400)
+                response = requests.post(url, headers=headers, data=json.dumps(payload_obj, ensure_ascii=False), timeout=600)
                 try:
                     response_json = response.json()
                 except Exception:
@@ -3362,7 +3364,7 @@ class AvatarImageGenerator(QWidget):
                     chosen_url = self._extract_image_url_response_avatar(response)
                 if not chosen_url:
                     return {"status": "error", "error": "未从响应中提取到图片URL", "task": t, "error_full_body": full_body}
-                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=400)
+                img_resp = requests.get(chosen_url, headers={"Accept": "image/*"}, timeout=600)
                 img_resp.raise_for_status()
                 img_bytes = img_resp.content
                 return {"status": "ok", "data_dict": {"prompt": t.get("prompt", ""), "is_batch": False}, "image_bytes": img_bytes}

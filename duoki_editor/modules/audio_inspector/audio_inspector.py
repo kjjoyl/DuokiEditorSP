@@ -176,7 +176,7 @@ class AudioTableModel(QAbstractTableModel):
     """音频数据表格模型"""
     def __init__(self, data=None):
         super().__init__()
-        self._data = data if data is not None else pd.DataFrame(columns=['stage_name', 'speaker', 'dialog'])
+        self._data = data if data is not None else pd.DataFrame(columns=['step_name', 'speaker', 'dialog'])
         self._original_data = None  # 存储原始数据
         self.highlighted_row = None
         
@@ -184,7 +184,7 @@ class AudioTableModel(QAbstractTableModel):
         return len(self._data)
         
     def columnCount(self, parent=None):
-        return 3  # 显示speaker、dialog和stage_name三列
+        return 3  # 显示step_name、speaker和dialog三列
         
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
@@ -192,7 +192,7 @@ class AudioTableModel(QAbstractTableModel):
             
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
-                value = self._data.iloc[index.row()].get('stage_name', '')
+                value = self._data.iloc[index.row()].get('step_name', '')
                 # 处理空值，不显示"nan"
                 if pd.isna(value) or str(value).lower() in ['nan', 'none', '']:
                     return ""
@@ -222,7 +222,7 @@ class AudioTableModel(QAbstractTableModel):
             return None
             
         if orientation == Qt.Orientation.Horizontal:
-            return ['stage_name', 'speaker', 'dialog'][section]
+            return ['step_name', 'speaker', 'dialog'][section]
             
         return str(section + 1)
         
@@ -232,8 +232,12 @@ class AudioTableModel(QAbstractTableModel):
         # 保存原始数据的完整副本
         self._original_data = data.copy()
         
-        # 创建显示数据，默认使用speaker和param1列
+        # 创建显示数据，默认使用step_name、speaker和param1列
         display_data = pd.DataFrame()
+        if 'step_name' in data.columns:
+            display_data['step_name'] = data['step_name'].copy()
+        else:
+            display_data['step_name'] = ''
         display_data['speaker'] = data['speaker'].copy()
         display_data['dialog'] = data['param1'].copy()
         
@@ -247,15 +251,15 @@ class AudioTableModel(QAbstractTableModel):
             
         self.beginResetModel()
         
-        # 从_original_data中读取三列并存入到_data，按照新的列顺序：stage_name, speaker, dialog
+        # 从_original_data中读取三列并存入到_data，按照新的列顺序：step_name, speaker, dialog
         display_data = pd.DataFrame()
         
-        # 第0列：添加stage_name列
-        if 'stage_name' in self._original_data.columns:
-            display_data['stage_name'] = self._original_data['stage_name'].copy()
+        # 第0列：添加step_name列
+        if 'step_name' in self._original_data.columns:
+            display_data['step_name'] = self._original_data['step_name'].copy()
         else:
-            # 如果原始数据中没有stage_name列，填充空值
-            display_data['stage_name'] = ''
+            # 如果原始数据中没有step_name列，填充空值
+            display_data['step_name'] = ''
         
         # 第1列：处理speaker列，应用映射
         speakers = self._original_data['speaker'].copy()
@@ -526,10 +530,10 @@ class AudioInspector(QWidget):
         self.table_view.setModel(self.table_model)
         
         # 设置表格样式
-        self.table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)  # stage_name列固定宽度
+        self.table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)  # step_name列固定宽度
         self.table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)  # speaker列固定宽度
         self.table_view.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # dialog列自适应
-        self.table_view.setColumnWidth(0, 100)  # stage_name列宽度
+        self.table_view.setColumnWidth(0, 100)  # step_name列宽度
         self.table_view.setColumnWidth(1, 80)   # speaker列宽度
         self.table_view.setAlternatingRowColors(True)
         
@@ -2124,21 +2128,37 @@ class AudioInspector(QWidget):
         """编辑dialog单元格，编辑原始带特殊格式的文本"""
         if not index.isValid() or index.column() != 2:  # dialog现在是第2列
             return
-            
         row = index.row()
         
         # 获取原始对话内容（带特殊格式）
-        # 优先从original_dialog_content获取，如果没有则从_data中获取
-        if self.original_dialog_content is not None and row < len(self.original_dialog_content):
-            original_text = str(self.original_dialog_content.iloc[row])
-        else:
-            # 如果没有original_dialog_content，直接从_data中获取原始内容
-            if (hasattr(self.table_model, '_data') and 
-                self.table_model._data is not None and 
-                row < len(self.table_model._data)):
-                original_text = str(self.table_model._data.iloc[row, 2])  # dialog列现在是第2列
+        # 优先使用整合模式下的orig_row与orig_col映射
+        original_text = None
+        if (
+            hasattr(self.table_model, '_data')
+            and isinstance(self.table_model._data, pd.DataFrame)
+            and 'orig_row' in self.table_model._data.columns
+            and 'orig_col' in self.table_model._data.columns
+            and hasattr(self.table_model, '_original_data')
+            and self.table_model._original_data is not None
+            and row < len(self.table_model._data)
+        ):
+            row_info = self.table_model._data.iloc[row]
+            orig_row = row_info.get('orig_row')
+            orig_col = row_info.get('orig_col')
+            if orig_row is not None and orig_col and orig_col in self.table_model._original_data.columns:
+                original_text = str(self.table_model._original_data.loc[orig_row, orig_col])
+        
+        # 如果无法根据orig_row与orig_col获取，则退回到原有逻辑
+        if original_text is None:
+            if self.original_dialog_content is not None and row < len(self.original_dialog_content):
+                original_text = str(self.original_dialog_content.iloc[row])
+            elif (
+                hasattr(self.table_model, '_data')
+                and self.table_model._data is not None
+                and row < len(self.table_model._data)
+            ):
+                original_text = str(self.table_model._data.iloc[row, 2])
             else:
-                # 最后的回退选项
                 original_text = self.table_model.data(index, Qt.ItemDataRole.DisplayRole)
             
         # 创建编辑对话框
@@ -2378,30 +2398,17 @@ class AudioInspector(QWidget):
 
     def match_scene_graph(self, row_index):
         """匹配SceneGraph数据并返回image1数据"""
-        # 首先尝试从_data中获取stage_name
+        # 始终从原始数据中获取stage_name，避免受显示数据影响
         stage_name = None
-        if (hasattr(self.table_model, '_data') and 
-            self.table_model._data is not None and 
-            row_index < len(self.table_model._data) and
-            'stage_name' in self.table_model._data.columns):
-            stage_name = self.table_model._data.iloc[row_index]['stage_name']
-            print(f"从_data中获取stage_name: {stage_name}")
-        
-        # 如果_data中没有或为空，则从原始数据中获取
-        if not stage_name:
-            if (not hasattr(self.table_model, '_original_data') or 
-                self.table_model._original_data is None or 
-                row_index >= len(self.table_model._original_data)):
-                print("无法获取原始数据或行索引超出范围")
-                return None
-            
-            # 检查stage_name字段是否存在
-            if 'stage_name' not in self.table_model._original_data.columns:
-                print("原始数据中不存在stage_name字段")
-                return None
-            
+        if (hasattr(self.table_model, '_original_data') and 
+            self.table_model._original_data is not None and 
+            row_index < len(self.table_model._original_data) and
+            'stage_name' in self.table_model._original_data.columns):
             stage_name = self.table_model._original_data.iloc[row_index]['stage_name']
             print(f"从_original_data中获取stage_name: {stage_name}")
+        else:
+            print("原始数据中不存在stage_name字段或行索引超出范围")
+            return None
         
         # 若为show_image_npc，优先从ShowImageNpc中查找背景图
         if stage_name and str(stage_name) == 'show_image_npc':
@@ -2538,23 +2545,14 @@ class AudioInspector(QWidget):
                 else:
                     print(f"文件名 {base_name} 格式不符合要求，无法提取template_type")
             
-            # 2. 获取stage_name作为stage_type参数
+            # 2. 获取stage_name作为stage_type参数（始终从原始数据中获取）
             stage_type = None
-            if (hasattr(self.table_model, '_data') and 
-                self.table_model._data is not None and 
-                row_index < len(self.table_model._data) and
-                'stage_name' in self.table_model._data.columns):
-                stage_type = self.table_model._data.iloc[row_index]['stage_name']
-                print(f"从_data中获取stage_type: {stage_type}")
-            
-            # 如果_data中没有或为空，则从原始数据中获取
-            if not stage_type:
-                if (hasattr(self.table_model, '_original_data') and 
-                    self.table_model._original_data is not None and 
-                    row_index < len(self.table_model._original_data) and
-                    'stage_name' in self.table_model._original_data.columns):
-                    stage_type = self.table_model._original_data.iloc[row_index]['stage_name']
-                    print(f"从_original_data中获取stage_type: {stage_type}")
+            if (hasattr(self.table_model, '_original_data') and 
+                self.table_model._original_data is not None and 
+                row_index < len(self.table_model._original_data) and
+                'stage_name' in self.table_model._original_data.columns):
+                stage_type = self.table_model._original_data.iloc[row_index]['stage_name']
+                print(f"从_original_data中获取stage_type: {stage_type}")
             
             # 3. 获取npc1_base_id和npc2_base_id
             npc1_base_id = getattr(self, 'npc1_base_id', None)
@@ -3259,7 +3257,9 @@ class AudioInspector(QWidget):
                 self.toast_manager.show_warning('未选择模板ID')
             print('[真机调试] 未选择模板ID')
             return
-        url = 'https://portal-test.qidianlingzhi.com:10199/server/sendGMCmd'
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        url = server_url + 'server/sendGMCmd'
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         cookie_header = ''
         if hasattr(self, 'auth_manager') and self.auth_manager:
@@ -3759,6 +3759,7 @@ class AudioInspector(QWidget):
         for idx, row in original_data.iterrows():
             speaker = row['speaker']
             stage_name = row.get('stage_name', '')  # 获取stage_name，如果不存在则为空字符串
+            step_name = row.get('step_name', '')    # 获取step_name，如果不存在则为空字符串
             
             # 为每个匹配列创建独立的行
             for col in matching_columns:
@@ -3768,6 +3769,7 @@ class AudioInspector(QWidget):
                         'speaker': speaker, 
                         'dialog': dialog_content,
                         'stage_name': stage_name,
+                        'step_name': step_name,
                         'orig_row': idx,
                         'orig_col': col
                     })
@@ -3810,10 +3812,18 @@ class AudioInspector(QWidget):
         
         # 应用speaker映射
         if not merged_df.empty:
-            # 重新排列列的顺序为：stage_name, speaker, dialog
+            # 重新排列列的顺序为：step_name, speaker, dialog
             ordered_df = pd.DataFrame()
             
-            # 第0列：stage_name
+            # 第0列：step_name（显示用），优先使用合并数据中的step_name
+            if 'step_name' in merged_df.columns:
+                ordered_df['step_name'] = merged_df['step_name'].copy()
+            elif 'step_name' in getattr(self.table_model, '_original_data', pd.DataFrame()).columns:
+                ordered_df['step_name'] = self.table_model._original_data.get('step_name', '')
+            else:
+                ordered_df['step_name'] = ''
+            
+            # 保留stage_name字段供内部匹配使用（不在表头中展示）
             if 'stage_name' in merged_df.columns:
                 ordered_df['stage_name'] = merged_df['stage_name'].copy()
             else:
@@ -3915,7 +3925,7 @@ class AudioInspector(QWidget):
         super().resizeEvent(event)
         # 调整固定列宽度
         if hasattr(self, 'table_view'):
-            self.table_view.setColumnWidth(0, 100)  # stage_name列宽度
+            self.table_view.setColumnWidth(0, 100)  # step_name列宽度
             self.table_view.setColumnWidth(1, 80)   # speaker列宽度
 
 
@@ -3934,10 +3944,27 @@ class AudioInspector(QWidget):
             # 即使没有数据，也要显示user_name
             self.update_format_table()
             return
-            
         # 保存原始对话内容（只在第一次或没有原始内容时保存）
         if self.original_dialog_content is None:
-            if hasattr(self.table_model, '_original_data') and self.table_model._original_data is not None:
+            if (
+                hasattr(self.table_model, '_data')
+                and isinstance(self.table_model._data, pd.DataFrame)
+                and 'orig_row' in self.table_model._data.columns
+                and 'orig_col' in self.table_model._data.columns
+                and hasattr(self.table_model, '_original_data')
+                and self.table_model._original_data is not None
+            ):
+                rows = []
+                for i in range(len(self.table_model._data)):
+                    row_info = self.table_model._data.iloc[i]
+                    orig_row = row_info.get('orig_row')
+                    orig_col = row_info.get('orig_col')
+                    if orig_row is not None and orig_col and orig_col in self.table_model._original_data.columns:
+                        rows.append(self.table_model._original_data.loc[orig_row, orig_col])
+                    else:
+                        rows.append(row_info.get('dialog', ''))
+                self.original_dialog_content = pd.Series(rows)
+            elif hasattr(self.table_model, '_original_data') and self.table_model._original_data is not None:
                 col = self.current_column if self.current_column in self.table_model._original_data.columns else 'param1'
                 self.original_dialog_content = self.table_model._original_data[col].copy()
             else:
@@ -4149,8 +4176,9 @@ class AudioInspector(QWidget):
                 return None
             return
         
-        # 构建完整的URL
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/restaurant/image/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/restaurant/image/"
         full_url = base_url + image_name
         
         def download_worker():
@@ -4214,8 +4242,9 @@ class AudioInspector(QWidget):
         image_name = f"{base_id}-image.png"
         talk_name = f"{base_id}-talk.gif"
         
-        # 构建完整的URL
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/common/image/unit/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/common/image/unit/"
         image_url = base_url + image_name
         talk_url = base_url + talk_name
         
@@ -4294,8 +4323,9 @@ class AudioInspector(QWidget):
         # 构建立绘图片名称
         portrait_name = f"{base_id}-image.png"
         
-        # 构建完整的URL
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/common/image/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/common/image/"
         full_url = base_url + portrait_name
         
         def download_worker():

@@ -15,6 +15,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 sys.path.insert(0, project_root)
 
 from duoki_editor.core.auth_manager import AuthManager
+from duoki_editor.utils.config_manager import ConfigManager
 
 try:
     from selenium import webdriver
@@ -34,7 +35,12 @@ class UsernameScraper:
     
     def __init__(self):
         self.auth_manager = AuthManager()
-        self.target_url = "https://portal-test.qidianlingzhi.com/users"
+        self.config_manager = ConfigManager()
+        server_url_without_port = self.config_manager.get_server_url_without_port()
+        if server_url_without_port:
+            self.target_url = f"{server_url_without_port}/users"
+        else:
+            self.target_url = "https://portal-test.qidianlingzhi.com/users"
         self.session = requests.Session()
         self.driver = None
         
@@ -188,7 +194,10 @@ class UsernameScraper:
             # 设置cookies
             if self.auth_manager.cookie:
                 # 先访问域名以设置cookies
-                self.driver.get("https://portal-test.qidianlingzhi.com")
+                portal_base = self.config_manager.get_server_url_without_port()
+                if not portal_base:
+                    portal_base = "https://portal-test.qidianlingzhi.com"
+                self.driver.get(portal_base)
                 
                 cookies = {}
                 if '=' in self.auth_manager.cookie:
@@ -203,11 +212,12 @@ class UsernameScraper:
                     cookies['lgtk'] = self.auth_manager.cookie
                 
                 # 添加cookies到driver
+                domain = portal_base.split('://', 1)[-1].split('/', 1)[0]
                 for key, value in cookies.items():
                     self.driver.add_cookie({
                         'name': key,
                         'value': value,
-                        'domain': 'portal-test.qidianlingzhi.com'
+                        'domain': domain
                     })
                 
             return True

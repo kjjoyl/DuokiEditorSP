@@ -2,6 +2,11 @@ import os
 import sys
 import configparser
 from pathlib import Path
+from urllib.parse import urlparse
+
+SERVER_URL_TEST = "https://portal-test.qidianlingzhi.com:10199/"
+SERVER_URL_STAGE = "https://portal.qidianlingzhi.com:10198/"
+SERVER_URL_PRODUCT = "https://portal.qidianlingzhi.com:10199/"
 
 class ConfigManager:
     """配置文件管理类，用于处理INI配置文件"""
@@ -134,7 +139,10 @@ class ConfigManager:
 
         if 'image_npc_desaturate' not in self.config['UI']:
             self.config['UI']['image_npc_desaturate'] = '1'
-            
+
+        if 'cookie' not in self.config['KEY']:
+            self.config['KEY']['cookie'] = ""
+
         if 'coze_duoki_content_bot_id' not in self.config['KEY']:
             self.config['KEY']['coze_duoki_content_bot_id'] = "7563610146597847079"
 
@@ -154,7 +162,6 @@ class ConfigManager:
         if 'feishu_access_token_expire_at' not in self.config['KEY']:
             self.config['KEY']['feishu_access_token_expire_at'] = ""
         
-            
         # 设置API默认值
         if 'server_url' not in self.config['API']:
             self.config['API']['server_url'] = 'https://portal-test.qidianlingzhi.com:10199/'
@@ -401,6 +408,7 @@ class ConfigManager:
         return v or ''
     
     def set_general_user_name(self, username: str):
+        self.load_config()
         self.config['General']['user_name'] = str(username or '')
         self.save_config()
     
@@ -505,6 +513,26 @@ class ConfigManager:
             self.save_config()
             return True
         return False
+
+    def get_server_url(self):
+        """获取服务端基础URL（总是返回以'/'结尾的URL）"""
+        v = self.config['API'].get('server_url', '')
+        v = str(v or '').strip()
+        if not v:
+            return ''
+        if not v.endswith('/'):
+            v = v + '/'
+        return v
+    
+    def get_server_url_without_port(self):
+        """获取去掉端口的服务器基础URL（不以'/'结尾）"""
+        v = self.get_server_url()
+        if not v:
+            return ''
+        parsed = urlparse(v)
+        if not parsed.scheme or not parsed.hostname:
+            return v.rstrip('/')
+        return f"{parsed.scheme}://{parsed.hostname}"
     
     def get_custom_tts(self):
         """获取自定义TTS URL"""
@@ -717,6 +745,7 @@ class ConfigManager:
     
     def set_feishu_tenant_access_token(self, token):
         """设置飞书租户访问令牌"""
+        self.load_config()
         self.config['KEY']['feishu_tenant_access_token'] = token
         self.save_config()
     
@@ -726,6 +755,7 @@ class ConfigManager:
     
     def set_feishu_refresh_token(self, token):
         """设置飞书刷新令牌"""
+        self.load_config()
         self.config['KEY']['feishu_refresh_token'] = token
         self.save_config()
     
@@ -735,6 +765,7 @@ class ConfigManager:
     
     def set_feishu_app_token(self, token):
         """设置飞书应用令牌"""
+        self.load_config()
         self.config['KEY']['feishu_app_token'] = token
         self.save_config()
     
@@ -748,5 +779,6 @@ class ConfigManager:
     
     def set_feishu_access_token_expire_at(self, expire_at):
         """设置飞书访问令牌过期时间"""
+        self.load_config()
         self.config['KEY']['feishu_access_token_expire_at'] = expire_at
         self.save_config()

@@ -14,6 +14,11 @@ warnings.filterwarnings("ignore", category=RuntimeWarning, module="pydub.utils")
 # 关闭 Selenium Manager 的匿名遥测上报，避免 Plausible 警告日志
 os.environ.setdefault("SE_AVOID_STATS", "true")
 
+if os.name == "nt" and hasattr(os, "dup2") and not os.environ.get("DUOKI_KEEP_STDERR"):
+    devnull = open(os.devnull, "w")
+    os.dup2(devnull.fileno(), sys.stderr.fileno())
+    sys.stderr = devnull
+
 from duoki_editor.main import main
 from duoki_editor.core.config import Config
 

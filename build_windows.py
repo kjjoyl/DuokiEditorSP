@@ -24,6 +24,8 @@ def build_windows():
         "--add-data=duoki_editor/resources;duoki_editor/resources",
         # Add config file
         "--add-data=duoki_editor/config.ini;duoki_editor",
+        # Add constants file
+        "--add-data=duoki_editor/constants.json;duoki_editor",
         # Add hidden imports
         "--hidden-import=PyQt6.QtCore",
         "--hidden-import=PyQt6.QtWidgets", 

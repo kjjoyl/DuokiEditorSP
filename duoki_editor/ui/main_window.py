@@ -197,9 +197,7 @@ class MainWindow(QMainWindow):
     def on_username_fetched(self, username):
         """用户名获取成功回调"""
         self.user_name = username
-        self.config_manager.load_config()
-        self.config_manager.set('General', 'user_name', username)
-        self.config_manager.save()
+        self.config_manager.set_general_user_name(username)
         print(f"已写入用户名到配置: {username}")
         self.update_login_status_menu()
         # 同步用户名到文案助手界面

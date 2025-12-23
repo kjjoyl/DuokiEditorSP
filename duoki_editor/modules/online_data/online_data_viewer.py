@@ -27,6 +27,7 @@ from PyQt6.QtGui import QColor, QBrush, QFont, QStandardItemModel, QStandardItem
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from duoki_editor.ui.toast import ToastManager
+from duoki_editor.utils.config_manager import ConfigManager
 import os
 import pandas as pd
 import re
@@ -317,8 +318,9 @@ class AudioPlayerDialog(QDialog):
     
     def download_audio(self):
         """下载音频文件"""
-        # 构建URL
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/restaurant/sound/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/restaurant/sound/"
         audio_url = base_url + self.audio_filename
         
         # 检查缓存
@@ -568,7 +570,9 @@ class ImagePreviewDialog(QDialog):
     
     def try_load_image(self):
         """尝试加载图片，先尝试common/image路径"""
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/common/image/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/common/image/"
         self.current_url = base_url + str(self.image_filename)
         self.current_attempt = 1
         self.load_image(self.current_url)
@@ -748,13 +752,17 @@ class ImagePreviewDialog(QDialog):
         
         if self.current_attempt == 2:
             # 尝试restaurant/image路径
-            base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/restaurant/image/"
+            cfg = ConfigManager()
+            server_url = cfg.get_server_url()
+            base_url = server_url + "client_resources/getFile?path=client/restaurant/image/"
             self.current_url = base_url + str(self.image_filename)
             self.image_label.setText("尝试restaurant路径加载图片...")
             self.load_image(self.current_url)
         elif self.current_attempt == 3:
             # 尝试cosplay/image路径
-            base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/cosplay/image/"
+            cfg = ConfigManager()
+            server_url = cfg.get_server_url()
+            base_url = server_url + "client_resources/getFile?path=client/cosplay/image/"
             self.current_url = base_url + str(self.image_filename)
             self.image_label.setText("尝试cosplay路径加载图片...")
             self.load_image(self.current_url)

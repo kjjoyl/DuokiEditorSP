@@ -402,6 +402,10 @@ class ContentGeneratorWidget(QWidget):
         self.npc_blank_grid.setColumnStretch(0, 1)
         self.npc_blank_scroll.setWidget(self.npc_blank_grid_container)
         left_layout.addWidget(self.npc_blank_scroll)
+        self.npc_keyword_text = QTextEdit()
+        self.npc_keyword_text.setPlaceholderText("请填写角色的全局剧情或全局行为动机…")
+        self.npc_keyword_text.setFixedHeight(80)
+        left_layout.addWidget(self.npc_keyword_text)
 
         right = QWidget()
         right_layout = QVBoxLayout(right)
@@ -561,27 +565,19 @@ class ContentGeneratorWidget(QWidget):
                 else:
                     expected.append(s)
             self._expected_speakers = expected
-        tpl = getattr(self, '_template_text_block', '')
-        if tpl:
-            final_text = self._compose_npc_prompt_text(tpl, npcname, npc2)
-            self._npc_final_message = final_text
-            if hasattr(self, 'npc_prompt_text') and self.npc_prompt_text:
-                self.npc_prompt_text.setPlainText(final_text)
-            print("NPC提示词已根据角色更新")
-        else:
-            if hasattr(self, 'npc_prompt_text') and self.npc_prompt_text:
-                old = self.npc_prompt_text.toPlainText()
-                if old:
-                    lines = old.splitlines()
-                    for i, line in enumerate(lines):
-                        if line.startswith('npc1:'):
-                            lines[i] = f"npc1:{npcname}"
-                        elif line.startswith('关键字：多应用'):
-                            lines[i] = f"关键字：多应用{npcname}的人设特征"
-                    new_text = "\n".join(lines)
-                    self._npc_final_message = new_text
-                    self.npc_prompt_text.setPlainText(new_text)
-                    print("NPC提示词已根据角色更新（fallback）")
+        if hasattr(self, 'npc_prompt_text') and self.npc_prompt_text:
+            old = self.npc_prompt_text.toPlainText()
+            if old:
+                lines = old.splitlines()
+                for i, line in enumerate(lines):
+                    if line.startswith('npc1:'):
+                        lines[i] = f"npc1:{npcname}"
+                    elif line.startswith('关键字：多应用'):
+                        lines[i] = f"关键字：多应用{npcname}的人设特征"
+                new_text = "\n".join(lines)
+                self._npc_final_message = new_text
+                self.npc_prompt_text.setPlainText(new_text)
+                print("NPC提示词已根据角色更新（fallback）")
 
     def _load_npc_blank_frames(self):
         import os
@@ -720,7 +716,6 @@ class ContentGeneratorWidget(QWidget):
             original_speakers.append(s)
             lines.append(f"{s}:{a}")
         text = "\n".join(lines)
-        self._template_text_block = text
         npcname = self.npc_role_combo.currentText().strip() if hasattr(self, 'npc_role_combo') else ''
         if npcname == "请选择一个角色":
             npcname = ''
@@ -737,13 +732,12 @@ class ContentGeneratorWidget(QWidget):
                 expected.append(npc2)
             else:
                 expected.append(s)
+        self._template_text_block = text
         self._original_speakers = original_speakers
         self._expected_speakers = expected
-        final_text = self._compose_npc_prompt_text(text, npcname, npc2)
-        self._npc_final_message = final_text
         if hasattr(self, 'npc_prompt_text'):
             self.npc_prompt_text.clear()
-            self.npc_prompt_text.setPlainText(final_text)
+            self.npc_prompt_text.setPlainText(text)
         if getattr(self, '_npc1_current', None) is not None:
             self._update_selected_template_details(self._npc1_current)
 
@@ -755,7 +749,12 @@ class ContentGeneratorWidget(QWidget):
         parts.append(f"npc1:{npc1}")
         parts.append(f"npc2:{npc2}")
         parts.append("")
-        parts.append(f"关键字：多应用{npc1}的人设特征")
+        kw_line = f"关键字：多应用{npc1}的人设特征"
+        if hasattr(self, 'npc_keyword_text') and self.npc_keyword_text:
+            kw = self.npc_keyword_text.toPlainText().strip()
+            if kw:
+                kw_line = f"{kw_line}，{kw}"
+        parts.append(kw_line)
         parts.append("")
         parts.append("工作模式：自动筛选")
         return "\n".join(parts)
@@ -815,6 +814,27 @@ class ContentGeneratorWidget(QWidget):
         if f is not None:
             f.mark_step_in_progress('wen')
 
+        tpl = getattr(self, '_template_text_block', '')
+        npc1 = getattr(self, '_npc1_current', '')
+        if hasattr(self, 'npc_role_combo') and (not npc1):
+            t = self.npc_role_combo.currentText().strip()
+            npc1 = '' if (not t or t == "请选择一个角色") else t
+            self._npc1_current = npc1
+        npc2 = getattr(self, '_npc2_current', '')
+        base_text = str(tpl or '').strip()
+        if not base_text and hasattr(self, 'npc_prompt_text') and self.npc_prompt_text:
+            base_text = self.npc_prompt_text.toPlainText().strip()
+        if not base_text:
+            Toast.warning("请先选择一个模板并生成提示词", self)
+            return
+        final_text = self._compose_npc_prompt_text(base_text, npc1, npc2)
+        self._npc_final_message = final_text
+        if hasattr(self, 'npc_prompt_text') and self.npc_prompt_text:
+            self.npc_prompt_text.setPlainText(final_text)
+        print("=== NPC对白生文提示词 ===")
+        print(final_text)
+        print("=== NPC对白生文提示词结束 ===")
+
         # 会话检查（内容对话ID）
         conv_id = self.config_manager.get_coze_content_conversation_dialog_id()
         if not conv_id:
@@ -837,13 +857,11 @@ class ContentGeneratorWidget(QWidget):
         if hasattr(self, 'session_id_edit'):
             self.session_id_edit.setText(conv_id)
 
-        # 检查准备好的提示词
+        # 检查准备好的提示词并发送消息到Coze（使用NPC上下文）
         message = getattr(self, '_npc_final_message', '').strip()
         if not message:
             Toast.warning("请先选择一个模板并生成提示词", self)
             return
-
-        # 发送消息到Coze（使用NPC上下文）
         self._send_message(message=message, target='npc')
 
     def _on_npc_conversation_created(self, conversation_id: str):
@@ -1180,9 +1198,8 @@ class ContentGeneratorWidget(QWidget):
         self._template_text_block = text
         self._original_speakers = original_speakers
         self._expected_speakers = expected
-        final_text = self._compose_npc_prompt_text(text, npcname, npc2)
-        self._npc_final_message = final_text
-        return final_text
+        self._npc_final_message = ''
+        return text
     
     def _build_ci_tpl_text_from_excel(self, frame, npc1: str, npc2: str) -> str:
         excel_path = self._get_content_excel_path(npc1, frame)
@@ -1313,11 +1330,28 @@ class ContentGeneratorWidget(QWidget):
             frame = self._batch_tu_workers.get(worker)
         name = getattr(frame, '_name', '') if frame is not None else ''
         print(f"[批量生成] 生图进程失败: 模板={name}, 错误={error_message}")
+        detail = None
+        full_body = None
+        if isinstance(data_dict, dict):
+            detail = data_dict.get('error_detail')
+            full_body = data_dict.get('error_full_body')
+        if detail:
+            print(f"[批量生成] 生图详细错误: {detail}")
+        if full_body:
+            print("[批量生成] 生图返回体:\n" + str(full_body))
+        popup_msg = error_message
+        extra_parts = []
+        if detail:
+            extra_parts.append(f"详细错误:\n{detail}")
+        if full_body:
+            extra_parts.append(f"返回体:\n{full_body}")
+        if extra_parts:
+            popup_msg = popup_msg + "\n\n" + "\n\n".join(extra_parts)
         if frame is not None:
             frame.mark_step_failed('tu')
         if getattr(self, '_batch_tu_workers', None) is not None:
             self._batch_tu_workers.pop(worker, None)
-        QMessageBox.critical(self, "生成失败", error_message)
+        QMessageBox.critical(self, "生成失败", popup_msg)
         self._batch_scan_for_tu_candidates()
         self._maybe_finish_batch()
 
@@ -2246,16 +2280,24 @@ class ContentGeneratorWidget(QWidget):
         if f is not None:
             f.mark_step_failed('tu')
         print(f"[NPC图片生成] 失败: {error_message}")
-        try:
-            detail = (data_dict or {}).get('error_detail')
-            if detail:
-                print(f"[NPC图片生成] 详细错误: {detail}")
-            # full_body = (data_dict or {}).get('error_full_body')
-            # if full_body:
-            #     print("[NPC图片生成] 返回体:\n" + str(full_body))
-        except Exception as e:
-            print(f"[NPC图片生成] x打印错误信息时异常: {e}")
-        QMessageBox.critical(self, "生成失败", error_message)
+        detail = None
+        full_body = None
+        if isinstance(data_dict, dict):
+            detail = data_dict.get('error_detail')
+            full_body = data_dict.get('error_full_body')
+        if detail:
+            print(f"[NPC图片生成] 详细错误: {detail}")
+        if full_body:
+            print("[NPC图片生成] 返回体:\n" + str(full_body))
+        popup_msg = error_message
+        extra_parts = []
+        if detail:
+            extra_parts.append(f"详细错误:\n{detail}")
+        if full_body:
+            extra_parts.append(f"返回体:\n" + str(full_body))
+        if extra_parts:
+            popup_msg = popup_msg + "\n\n" + "\n\n".join(extra_parts)
+        QMessageBox.critical(self, "生成失败", popup_msg)
         if hasattr(self, 'npc_image_container') and self.npc_image_container:
             self.npc_image_container.stop_loading()
             self.npc_image_container.setText("生成失败")

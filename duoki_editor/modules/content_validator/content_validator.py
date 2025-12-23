@@ -180,7 +180,7 @@ class ValidationTableModel(QAbstractTableModel):
     def _generate_tooltip_for_type(self, type_value):
         """为type列的数字生成tooltip"""
         condition_descriptions = {
-            '1': '条件1：英文相关变量内容与模板相比种类不匹配',
+            '1': '条件1：英文相关变量内容与模板相比种类不匹配或空白数据',
             '2': '条件2：不应出现中括号中只有数字的情况',
             '3': '条件3：内容中不应该出现冒号、波浪线及省略号',
             '4': '条件4：内容的首尾不应出现配对的单引号或反引号',
@@ -292,9 +292,18 @@ class ContentValidator(QWidget):
         self.character_table_manager = CharacterTableManager()
         self.init_ui()
        
-    def check_condition_1(self, text, param1_text):
+    def check_condition_1(self, text, param1_text, step_name=None, is_empty_cell=False):
         """条件1：判定内容对应的param1的文本中，包含"_en"的特殊格式{xxx}，例如{word_en}等，在当前内容中，种类是否齐备"""
         issues = []
+        
+        if is_empty_cell:
+            step = ''
+            if step_name is not None and not pd.isna(step_name):
+                step = str(step_name).strip()
+            if step and not re.match(r'^\(.*\)$', step):
+                issues.append("该行step_name不是括号包裹，但当前单元格内容为空")
+                return True, issues
+            return False, []
         
         # 忽略特殊规则模式（不包含"_en"的特殊格式）
         ignore_patterns = ['{user_name}', '{npc1_name}', '{npc2_name}', '{npc1_name_origin}', '{npc2_name_origin}']
@@ -924,12 +933,13 @@ class ContentValidator(QWidget):
         pattern = r"^[a-zA-Z0-9\s'.,!?;:()\-\"|\[\]’\"]*$"
         return re.match(pattern, text_clean.strip()) is not None
         
-    def validate_cell_content(self, content, param1_content, column_name, row_index):
+    def validate_cell_content(self, content, param1_content, column_name, row_index, step_name=None):
         """校验单元格内容"""
+        content_is_empty = False
         if pd.isna(content) or str(content).strip() == '':
-            return []
+            content_is_empty = True
         
-        content_str = str(content)
+        content_str = '' if pd.isna(content) else str(content)
         param1_str = str(param1_content) if not pd.isna(param1_content) else ''
         
         validation_results = []
@@ -937,63 +947,55 @@ class ContentValidator(QWidget):
         all_issues = []
         
         # 检查条件1（不变）
-        has_issue_1, issues_1 = self.check_condition_1(content_str, param1_str)
+        has_issue_1, issues_1 = self.check_condition_1(content_str, param1_str, step_name, content_is_empty)
         if has_issue_1:
             hit_conditions.append('1')
             all_issues.extend(issues_1)
         
-        # 检查条件2
-        has_issue_2, issues_2 = self.check_condition_2(content_str)
-        if has_issue_2:
-            hit_conditions.append('2')
-            all_issues.extend(issues_2)
-        
-        # 检查条件3
-        has_issue_3, issues_3 = self.check_condition_3(content_str)
-        if has_issue_3:
-            hit_conditions.append('3')
-            all_issues.extend(issues_3)
-        
-        # 检查条件4
-        has_issue_4, issues_4 = self.check_condition_4(content_str)
-        if has_issue_4:
-            hit_conditions.append('4')
-            all_issues.extend(issues_4)
-        
-        # 检查条件5
-        has_issue_5, issues_5 = self.check_condition_5(content_str)
-        if has_issue_5:
-            hit_conditions.append('5')
-            all_issues.extend(issues_5)
-        
-        # 检查条件6
-        has_issue_6, issues_6 = self.check_condition_6(content_str)
-        if has_issue_6:
-            hit_conditions.append('6')
-            all_issues.extend(issues_6)
+        if not content_is_empty:
+            has_issue_2, issues_2 = self.check_condition_2(content_str)
+            if has_issue_2:
+                hit_conditions.append('2')
+                all_issues.extend(issues_2)
             
-        # 检查条件7
-        has_issue_7, issues_7 = self.check_condition_7(content_str)
-        if has_issue_7:
-            hit_conditions.append('7')
-            all_issues.extend(issues_7)
+            has_issue_3, issues_3 = self.check_condition_3(content_str)
+            if has_issue_3:
+                hit_conditions.append('3')
+                all_issues.extend(issues_3)
             
-        # 检查条件8
-        has_issue_8, issues_8 = self.check_condition_8(content_str)
-        if has_issue_8:
-            hit_conditions.append('8')
-            all_issues.extend(issues_8)
+            has_issue_4, issues_4 = self.check_condition_4(content_str)
+            if has_issue_4:
+                hit_conditions.append('4')
+                all_issues.extend(issues_4)
             
-        # 检查条件9
-        has_issue_9, issues_9 = self.check_condition_9(content_str)
-        if has_issue_9:
-            hit_conditions.append('9')
-            all_issues.extend(issues_9)
-        # 检查条件10
-        has_issue_10, issues_10 = self.check_condition_10(content_str)
-        if has_issue_10:
-            hit_conditions.append('10')
-            all_issues.extend(issues_10)
+            has_issue_5, issues_5 = self.check_condition_5(content_str)
+            if has_issue_5:
+                hit_conditions.append('5')
+                all_issues.extend(issues_5)
+            
+            has_issue_6, issues_6 = self.check_condition_6(content_str)
+            if has_issue_6:
+                hit_conditions.append('6')
+                all_issues.extend(issues_6)
+                
+            has_issue_7, issues_7 = self.check_condition_7(content_str)
+            if has_issue_7:
+                hit_conditions.append('7')
+                all_issues.extend(issues_7)
+                
+            has_issue_8, issues_8 = self.check_condition_8(content_str)
+            if has_issue_8:
+                hit_conditions.append('8')
+                all_issues.extend(issues_8)
+                
+            has_issue_9, issues_9 = self.check_condition_9(content_str)
+            if has_issue_9:
+                hit_conditions.append('9')
+                all_issues.extend(issues_9)
+            has_issue_10, issues_10 = self.check_condition_10(content_str)
+            if has_issue_10:
+                hit_conditions.append('10')
+                all_issues.extend(issues_10)
         
         # 如果有任何问题，创建验证结果
         if hit_conditions:
@@ -1459,7 +1461,7 @@ class ContentValidator(QWidget):
         self.image_select_dir_btn.clicked.connect(self._on_select_image_dir)
         self.image_dir_path_edit = QLineEdit("")
         self.image_dir_path_edit.setReadOnly(True)
-        self.image_start_btn = QPushButton("开始配置")
+        self.image_start_btn = QPushButton("开始图片配置")
         self.image_start_btn.setFixedWidth(150)
         self.image_start_btn.setEnabled(False)
         self.image_start_btn.clicked.connect(self._on_start_image_config)
@@ -1764,7 +1766,9 @@ class ContentValidator(QWidget):
             else:
                 QMessageBox.warning(self, "图片", f"文件不存在: {text}")
             return
-        base_url = "https://portal-test.qidianlingzhi.com:10199/client_resources/getFile?path=client/restaurant/image/"
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        base_url = server_url + "client_resources/getFile?path=client/restaurant/image/"
         full_url = base_url + text
         try:
             from duoki_editor.modules.online_data.online_data_viewer import ImagePreviewDialog
@@ -1791,6 +1795,25 @@ class ContentValidator(QWidget):
             if not base_out:
                 base_out = './output/scene'
             print(f"[路径转换] 开始，输出目录: {base_out}")
+            mapping_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'resources', 'data', 'mapping', 'image_name_mapping.xlsx'))
+            mapping_dict = {}
+            if os.path.exists(mapping_path):
+                map_df = pd.read_excel(mapping_path)
+                if 'current_name' in map_df.columns and 'force_name' in map_df.columns:
+                    for _, row in map_df.iterrows():
+                        cur = row.get('current_name')
+                        force = row.get('force_name')
+                        if pd.isna(cur) or pd.isna(force):
+                            continue
+                        cur_str = str(cur).strip()
+                        force_str = str(force).strip()
+                        if cur_str:
+                            mapping_dict[cur_str] = force_str
+                    print(f"[路径转换] 加载映射文件: {mapping_path}，有效条目: {len(mapping_dict)}")
+                else:
+                    print(f"[路径转换] 映射文件缺少必要列: {mapping_path}")
+            else:
+                print(f"[路径转换] 未找到映射文件: {mapping_path}")
             for sheet_name, df in list(getattr(self, '_image_right_data', {}).items()):
                 if df is None or df.empty:
                     continue
@@ -1847,6 +1870,10 @@ class ContentValidator(QWidget):
                     import shutil
                     shutil.copy2(src, dst)
                     rel_path = os.path.join(str(sheet_name), 'story', new_name).replace('\\','/')
+                    if mapping_dict:
+                        mapped = mapping_dict.get(rel_path)
+                        if mapped:
+                            rel_path = str(mapped)
                     df.at[i, 'url_image'] = rel_path
                     df.at[i, '_missing_image'] = False
                     changed = True
@@ -1974,7 +2001,8 @@ class ContentValidator(QWidget):
         headers = {}
         if cookie:
             headers['Cookie'] = cookie
-        url_api = 'https://portal-test.qidianlingzhi.com:10199/client_resources/upload'
+        server_url = cfg.get_server_url()
+        url_api = server_url + 'client_resources/upload'
         tasks = []
         missing_stats = {}
         for sheet_name, df in list(getattr(self, '_image_right_data', {}).items()):
@@ -2063,7 +2091,9 @@ class ContentValidator(QWidget):
         runner.start()
 
     def _on_start_online_check(self):
-        url = 'https://portal-test.qidianlingzhi.com:10199/server/sendGMCmd'
+        cfg = ConfigManager()
+        server_url = cfg.get_server_url()
+        url = server_url + 'server/sendGMCmd'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -3114,26 +3144,22 @@ class ContentValidator(QWidget):
             self.quick_fix_btn.setEnabled(True)
             self.save_btn.setEnabled(True)
             
-            # 开始内容校验
             all_validation_results = []
             
-            # 定义要忽略的列
             ignored_columns = ['stage_id', 'stage_name', 'step_name', 'speaker']
             
-            # 遍历每一行数据
             for row_index, row in df.iterrows():
                 param1_content = row.get('param1', '')
+                step_name = row.get('step_name', '')
                 
-                # 遍历所有列（除了param1列本身和忽略的列）
                 for column_name in df.columns:
                     if column_name == 'param1' or column_name in ignored_columns:
                         continue
                     
                     cell_content = row[column_name]
                     
-                    # 校验单元格内容
                     validation_results = self.validate_cell_content(
-                        cell_content, param1_content, column_name, row_index
+                        cell_content, param1_content, column_name, row_index, step_name
                     )
                     
                     all_validation_results.extend(validation_results)
@@ -3194,27 +3220,17 @@ class ContentValidator(QWidget):
         """执行具体的校验逻辑"""
         validation_results = []
         
-        # 定义要忽略的列
         ignored_columns = ['stage_id', 'stage_name', 'step_name', 'speaker']
         
-        # 遍历DataFrame的每一行进行验证
         for index, row in df.iterrows():
-            # 获取需要验证的列
+            param1_content = row.get('param1', '')
+            step_name = row.get('step_name', '')
             for column_name in df.columns:
-                if column_name == 'param1' or column_name in ignored_columns:  # 跳过param1列和忽略的列
+                if column_name == 'param1' or column_name in ignored_columns:
                     continue
                     
                 content = row[column_name]
-                param1_content = row.get('param1', '')
-                
-                # 跳过空内容
-                if pd.isna(content) or str(content).strip() == '':
-                    continue
-                
-                # 执行验证
-                issues = self.validate_cell_content(str(content), str(param1_content), column_name, index)
-                
-                # 如果有问题，添加到结果中
+                issues = self.validate_cell_content(content, param1_content, column_name, index, step_name)
                 if issues:
                     for issue in issues:
                         validation_results.append({

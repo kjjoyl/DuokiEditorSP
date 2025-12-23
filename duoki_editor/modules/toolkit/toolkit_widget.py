@@ -859,6 +859,31 @@ class ToolkitWidget(QWidget):
         self.script_generator_output.setTextCursor(cursor)
         self.script_generator_output.insertPlainText(content)
 
+    def _process_generated_script_text(self, text: str) -> str:
+        if not text:
+            return ""
+        lines = text.splitlines()
+        if lines and str(lines[0]).lstrip().startswith("```"):
+            lines = lines[1:]
+        if lines and str(lines[-1]).lstrip().startswith("```"):
+            lines = lines[:-1]
+        start_idx = 0
+        found_import = False
+        for i, line in enumerate(lines):
+            if str(line).lstrip().startswith("import"):
+                start_idx = i
+                found_import = True
+                break
+        if found_import:
+            lines = lines[start_idx:]
+        end_idx = len(lines)
+        for i, line in enumerate(lines):
+            if "raise SystemExit(main())" in str(line):
+                end_idx = i + 1
+                break
+        lines = lines[:end_idx]
+        return "\n".join(lines)
+
     def _on_script_chat_finished(self, chat_data: dict):
         print("Coze脚本生成完成")
         self._script_generating = False
@@ -870,12 +895,10 @@ class ToolkitWidget(QWidget):
                 self.script_generator_output.setPlainText(full)
         text = self.script_generator_output.toPlainText()
         if text.strip():
-            lines = text.splitlines()
-            if lines and str(lines[0]).lstrip().startswith("```"):
-                lines = lines[1:]
-            if lines and str(lines[-1]).lstrip().startswith("```"):
-                lines = lines[:-1]
-            text_to_save = "\n".join(lines)
+            text_to_save = self._process_generated_script_text(text)
+            if not text_to_save.strip():
+                print("脚本内容为空，未自动保存")
+                return
             script_dir = self.config_manager.ensure_script_output_directory()
             ts = time.strftime("%Y%m%d%H%M%S", time.localtime())
             file_path = os.path.join(script_dir, f"script_{ts}.py")
@@ -901,12 +924,12 @@ class ToolkitWidget(QWidget):
             if self.toast_manager:
                 self.toast_manager.show_warning("暂无可保存的脚本内容")
             return
-        lines = text.splitlines()
-        if lines and str(lines[0]).lstrip().startswith("```"):
-            lines = lines[1:]
-        if lines and str(lines[-1]).lstrip().startswith("```"):
-            lines = lines[:-1]
-        text_to_save = "\n".join(lines)
+        text_to_save = self._process_generated_script_text(text)
+        if not text_to_save.strip():
+            if self.toast_manager:
+                self.toast_manager.show_warning("脚本内容为空，无法保存")
+            print("脚本内容为空，未另存为")
+            return
         default_path = os.getcwd()
         file_path, _ = QFileDialog.getSaveFileName(
             self,

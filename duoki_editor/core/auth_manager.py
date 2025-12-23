@@ -9,7 +9,7 @@ class AuthManager:
     
     def __init__(self):
         self.config_manager = ConfigManager()
-        self.portal_url = "https://portal-test.qidianlingzhi.com:10199/"
+        self.portal_url = self.config_manager.get_server_url() or ''
         self.cookie = None
         
     def load_auth_data(self):

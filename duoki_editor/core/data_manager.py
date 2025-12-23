@@ -17,135 +17,135 @@ class DataManager:
         self.data_cache = {}  # 内存中的数据缓存 {file_path: {sheet_name: DataFrame}}
         self.config_manager = ConfigManager()  # 初始化配置管理器
         self.auth_manager = auth_manager or AuthManager()  # 使用传入的认证管理器或创建新的
-        
-        # 定义要下载的文件列表
+        server_url = self.config_manager.get_server_url()
+        base_config_url = server_url + "config/getFile?path="
         self.files_to_download = [
             # common 目录下的文件
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/CharacterTable.xlsx",
+                "url": base_config_url + "configs/common/CharacterTable.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/NpcAddressConfig.xlsx",
+                "url": base_config_url + "configs/common/NpcAddressConfig.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/BasicitemTable.xlsx",
+                "url": base_config_url + "configs/common/BasicitemTable.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/Guide.xlsx",
+                "url": base_config_url + "configs/common/Guide.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/MapInfo.xlsx",
+                "url": base_config_url + "configs/common/MapInfo.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/PoiTable.xlsx",
+                "url": base_config_url + "configs/common/PoiTable.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/PromptParam.xlsx",
+                "url": base_config_url + "configs/common/PromptParam.xlsx",
                 "target_dir": "common"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/common/SpeechParametersTable.xlsx",
+                "url": base_config_url + "configs/common/SpeechParametersTable.xlsx",
                 "target_dir": "common"
             },
             
             # restaurant 目录下的文件
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/AnimalPrefer.xlsx",
+                "url": base_config_url + "configs/restaurant/AnimalPrefer.xlsx",
                 "target_dir": "restaurant"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/DemoPic.xlsx",
+                "url": base_config_url + "configs/restaurant/DemoPic.xlsx",
                 "target_dir": "restaurant"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/ItemPrompt.xlsx",
+                "url": base_config_url + "configs/restaurant/ItemPrompt.xlsx",
                 "target_dir": "restaurant"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/Knowledge.xlsx",
+                "url": base_config_url + "configs/restaurant/Knowledge.xlsx",
                 "target_dir": "restaurant",
                 "filename": "Knowledge.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/LevelAppUnlock.xlsx",
+                "url": base_config_url + "configs/restaurant/LevelAppUnlock.xlsx",
                 "target_dir": "restaurant",
                 "filename": "LevelAppUnlock.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/LevelConfig.xlsx",
+                "url": base_config_url + "configs/restaurant/LevelConfig.xlsx",
                 "target_dir": "restaurant",
                 "filename": "LevelConfig.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/Menu.xlsx",
+                "url": base_config_url + "configs/restaurant/Menu.xlsx",
                 "target_dir": "restaurant",
                 "filename": "Menu.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/PhraseConfig.xlsx",
+                "url": base_config_url + "configs/restaurant/PhraseConfig.xlsx",
                 "target_dir": "restaurant",
                 "filename": "PhraseConfig.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/SceneGraph.xlsx",
+                "url": base_config_url + "configs/restaurant/SceneGraph.xlsx",
                 "target_dir": "restaurant",
                 "filename": "SceneGraph.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/SentenceConfig.xlsx",
+                "url": base_config_url + "configs/restaurant/SentenceConfig.xlsx",
                 "target_dir": "restaurant",
                 "filename": "SentenceConfig.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/Speech.xlsx",
+                "url": base_config_url + "configs/restaurant/Speech.xlsx",
                 "target_dir": "restaurant",
                 "filename": "Speech.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/Structure.xlsx",
+                "url": base_config_url + "configs/restaurant/Structure.xlsx",
                 "target_dir": "restaurant",
                 "filename": "Structure.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/TemplateConfig.xlsx",
+                "url": base_config_url + "configs/restaurant/TemplateConfig.xlsx",
                 "target_dir": "restaurant",
                 "filename": "TemplateConfig.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/TemplateType.xlsx",
+                "url": base_config_url + "configs/restaurant/TemplateType.xlsx",
                 "target_dir": "restaurant",
                 "filename": "TemplateType.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/Upgrade.xlsx",
+                "url": base_config_url + "configs/restaurant/Upgrade.xlsx",
                 "target_dir": "restaurant",
                 "filename": "Upgrade.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/WordConfig.xlsx",
+                "url": base_config_url + "configs/restaurant/WordConfig.xlsx",
                 "target_dir": "restaurant",
                 "filename": "WordConfig.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/ShowImageNpc.xlsx",
+                "url": base_config_url + "configs/restaurant/ShowImageNpc.xlsx",
                 "target_dir": "restaurant",
                 "filename": "ShowImageNpc.xlsx"
             },
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/restaurant/StorePrefer.xlsx",
+                "url": base_config_url + "configs/restaurant/StorePrefer.xlsx",
                 "target_dir": "restaurant",
                 "filename": "StorePrefer.xlsx"
             },
             
             # cosplay 目录下的文件
             {
-                "url": "https://portal-test.qidianlingzhi.com:10199/config/getFile?path=configs/cosplay/TaskPromptTable.xlsx",
+                "url": base_config_url + "configs/cosplay/TaskPromptTable.xlsx",
                 "target_dir": "cosplay",
                 "filename": "TaskPromptTable.xlsx"
             }
